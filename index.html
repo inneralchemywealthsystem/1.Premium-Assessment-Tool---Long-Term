@@ -146,6 +146,8 @@ body{background:var(--black);color:var(--text);font-family:'Jost',sans-serif;fon
         <div class="field"><label>Do you have children?</label>
           <select id="haschild"><option value="none">No children</option><option value="one">1 child</option><option value="two">2 children</option></select>
         </div>
+        <div class="field"><label>Your email address</label><input id="email" type="email" placeholder="e.g. rahul@email.com"/></div>
+        <div class="field"><label>WhatsApp / mobile number</label><input id="phone" type="tel" placeholder="e.g. 9876543210"/></div>
       </div>
       <div id="child-fields"></div>
     </div>
@@ -403,8 +405,41 @@ function renderAdvisory(){
   document.getElementById('advisory-container').innerHTML=advHtml;
 }
 
+// ── LEAD CAPTURE ──
+// Replace YOUR_FORMSPREE_ID below with your actual Formspree form ID
+// Get it free at formspree.io → New Form → copy the ID from the endpoint URL
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORMSPREE_ID';
+let leadCaptured = false;
+
+function captureLead(){
+  if(leadCaptured) return;
+  const name = document.getElementById('name')?.value?.trim();
+  const email = document.getElementById('email')?.value?.trim();
+  const phone = document.getElementById('phone')?.value?.trim();
+  if(!name && !email && !phone) return;
+  leadCaptured = true;
+  const payload = {
+    tool: 'Long-Term Goals Planner',
+    name: name || '—',
+    email: email || '—',
+    phone: phone || '—',
+    age: document.getElementById('age')?.value || '—',
+    income: document.getElementById('income')?.value || '—',
+    submitted: new Date().toLocaleString('en-IN')
+  };
+  fetch(FORMSPREE_ENDPOINT, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+    body: JSON.stringify(payload)
+  }).catch(()=>{});
+}
+
 function goTo(n){
-  if(n===1){buildChildFields();setTimeout(buildGoalInputs,10)}
+  if(n===1){
+    buildChildFields();
+    setTimeout(buildGoalInputs,10);
+    captureLead(); // capture as soon as they move past Sheet 1
+  }
   if(n===2){buildGoalInputs();calculate()}
   document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('active',i===n));
   document.querySelectorAll('.stab').forEach((b,i)=>{b.classList.remove('active','done');if(i===n)b.classList.add('active');else if(i<n)b.classList.add('done');});
